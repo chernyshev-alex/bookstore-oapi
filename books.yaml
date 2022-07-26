@@ -1,0 +1,130 @@
+openapi: 3.0.0
+
+servers:
+- description: Local dev
+  url: http://127.0.0.1:9234
+
+info:
+  contact:
+    url: https://github.com/chernyshev-alex/books-store
+  description: REST APIs books service
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  title: ToDo API
+  version: 0.0.1
+
+paths:
+  /search/books:
+    get:
+      operationId: SearchBooksByAuthor
+      parameters:
+      - in: query
+        name: authorId
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          $ref: '#/components/responses/SearchBooksResponse'
+        "400":
+          $ref: '#/components/responses/ErrorResponse'
+        "500":
+          $ref: '#/components/responses/ErrorResponse'
+
+  /books:
+    post:
+      operationId: AddBook
+      summary: Add a new book
+      requestBody:
+          $ref:  '#/components/requestBodies/AddBookRequest'
+      responses:
+        "201":
+          $ref: '#/components/responses/AddBookResponse'
+        "400":
+          $ref: '#/components/responses/ErrorResponse'
+        "500":
+          $ref: '#/components/responses/ErrorResponse'
+
+  /books/{bookId}:
+    delete:
+      operationId: DeleteBook
+      parameters:
+      - in: path
+        name: bookId
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: removed
+        "404":
+          description: not found
+        "500":
+          $ref: '#/components/responses/ErrorResponse'
+
+components:
+  requestBodies:
+    AddBookRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Book'
+
+  responses:
+    AddBookResponse:
+      description: add book response
+      content:
+        application/json:
+          schema:
+            properties:
+              book:
+                $ref: '#/components/schemas/Book'
+
+    SearchBooksResponse:
+      description: search books response
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Book'
+
+    ErrorResponse:
+      description: Response when errors happen.
+      content:
+        application/json:
+          schema:
+            properties:
+              error:
+                type: string
+
+  schemas:
+    Book:
+      type: object
+      properties:
+        bookId:
+          type: integer
+        title:
+          type: string
+        publisherId:
+          type: integer
+        publisher:
+          type: string
+        authorId:
+          type: integer
+        author:
+          type: string
+        year:
+          type: integer
+      required:
+        - bookId 
+        - title
+        - publisherId
+        - publisher
+        - authorId
+        - author
+        - year
+   
+

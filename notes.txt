@@ -1,0 +1,32 @@
+
+install https://direnv.net/
+https://mariocarrion.com/2020/11/20/golang-go-tool-direnv.html
+
+mocking HTTP traffic via gock https://www.youtube.com/watch?v=YCRjdFvjrzg
+https://github.com/h2non/gock#examples
+https://github.com/h2non/gock  - mock http client
+
+testing equality via go-cmp  https://www.youtube.com/watch?v=ae15DzSwNnU
+google/go-cmp
+
+mocking and testing via counterfeiter https://www.youtube.com/watch?v=ENqwq64TsDk
+
+Protocol Buffers (gRPC Tutorial)  https://www.youtube.com/watch?v=U69jAJYqdQs
+
+Mocking HTTP - gock
+
+OpenAPI blueprint
+
+Security - Vault, OAuth2 TODO
+Telemetry, Metrics, Logging - Jaeger with Prometues, OpenTelemetry, Zap
+Persistent & migration - XORM
+API, Data models - OpenAPI3.0 , Swagger UI 
+
+Mocking & Testing : counterfeiter, go-cmp
+Mocking HTTP - gock
+
+Configuration management -  Viper
+
+Okta 2K  :  Aleksandr.Chernyshev@2k.com  XEYsRDbYpSKoN5RVuOlD
+
+
