@@ -8,6 +8,7 @@ import (
 
 	"github.com/chernyshev-alex/go-bookstore-oapi/internal/env"
 	"github.com/chernyshev-alex/go-bookstore-oapi/internal/gen"
+	"github.com/chernyshev-alex/go-bookstore-oapi/internal/logger"
 	"github.com/chernyshev-alex/go-bookstore-oapi/internal/otel"
 	"github.com/chernyshev-alex/go-bookstore-oapi/internal/repo"
 	"github.com/chernyshev-alex/go-bookstore-oapi/internal/rest"
@@ -30,7 +31,6 @@ type serverConfig struct {
 	//	Memcached     *memcache.Client
 	metrics     http.Handler
 	middlewares gin.HandlersChain
-	logger      *zap.Logger
 	handler     gen.ServerInterface
 }
 
@@ -41,12 +41,12 @@ func NewServer(conf *serverConfig) *http.Server {
 	}
 
 	r = gen.RegisterHandlers(r, conf.handler)
-	registerSwaggerApi(conf.logger, r)
+	registerSwaggerApi(r)
 
 	lmt := tollbooth.NewLimiter(conf.env.MAX_LIMITER, &limiter.ExpirableOptions{DefaultExpirationTTL: time.Second})
 	lmtmw := tollbooth.LimitHandler(lmt, r)
 
-	conf.logger.Info("starting server on", zap.String("address", conf.env.HTTP_ADDRESS))
+	logger.Info("starting server on", zap.String("address", conf.env.HTTP_ADDRESS))
 	return &http.Server{
 		Handler:           lmtmw,
 		Addr:              conf.env.HTTP_ADDRESS,
@@ -66,15 +66,15 @@ func initDb(env *env.EnvConfig) *xorm.Engine {
 	}
 	err = repo.MayBeMigrate(engine)
 	if err != nil {
-		log.Panic("db migraton failed", db_zap_info, zap.Error(err))
+		logger.Panic("db migraton failed", db_zap_info, zap.Error(err))
 	}
 	return engine
 }
 
-func registerSwaggerApi(logger *zap.Logger, router *gin.Engine) {
+func registerSwaggerApi(router *gin.Engine) {
 	swagger, err := api.GetSwagger()
 	if err != nil {
-		logger.Error("failed loading swagger file ", zap.Error(err))
+		logger.Error("failed loading swagger file ", err)
 	}
 
 	router.GET("/openapi3.json", func(c *gin.Context) {
@@ -86,7 +86,7 @@ func registerSwaggerApi(logger *zap.Logger, router *gin.Engine) {
 }
 
 func startServices(env *env.EnvConfig) {
-	logger, _ := zap.NewProduction()
+	//logger, _ := zap.NewProduction()
 
 	swagger, err := api.GetSwagger()
 	if err != nil {
@@ -122,7 +122,6 @@ func startServices(env *env.EnvConfig) {
 
 	srv_conf := serverConfig{
 		env:     env,
-		logger:  logger,
 		db:      db_engine,
 		metrics: promExporter,
 		handler: bookStoreAPI,
@@ -134,7 +133,7 @@ func startServices(env *env.EnvConfig) {
 
 	err = NewServer(&srv_conf).ListenAndServe()
 	if err != http.ErrServerClosed {
-		logger.Fatal("http server failed", zap.Error(err))
+		logger.Panic("http server failed", zap.Error(err))
 	}
 }
 
