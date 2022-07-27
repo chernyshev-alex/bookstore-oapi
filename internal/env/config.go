@@ -16,20 +16,15 @@ type EnvConfig struct {
 }
 
 func LoadConfig(configPath string) (*EnvConfig, error) {
-	var (
-		config EnvConfig
-		err    error
-	)
-
 	viper.SetConfigFile(configPath)
-	if err = viper.ReadInConfig(); err == nil {
-		config = EnvConfig{
-			HTTP_ADDRESS:  viper.GetString("HTTP_ADDRESS"),
-			MAX_LIMITER:   viper.GetFloat64("MAX_LIMITER"),
-			DB_DRIVER:     viper.GetString("DB_DRIVER"),
-			DATABASE_NAME: viper.GetString("DB_DATASOURCE"),
-		}
-		return &config, nil
+	if err := viper.ReadInConfig(); err != nil {
+		return nil, err
 	}
-	return nil, err
+	return &EnvConfig{
+		HTTP_ADDRESS:      viper.GetString("HTTP_ADDRESS"),
+		MAX_LIMITER:       viper.GetFloat64("MAX_LIMITER"),
+		DB_DRIVER:         viper.GetString("DB_DRIVER"),
+		DATABASE_NAME:     viper.GetString("DB_DATASOURCE"),
+		DATABASE_USERNAME: viper.GetString("DATABASE_USERNAME"),
+	}, nil
 }

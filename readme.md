@@ -17,3 +17,6 @@
    - go-cmp
 7. Configuration
    - Viper
+8. HTTP Control 
+   - Circuit Breaker
+   - Requests Limiter  
