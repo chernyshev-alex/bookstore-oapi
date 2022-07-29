@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/chernyshev-alex/go-bookstore-oapi/internal/gen"
 	"github.com/chernyshev-alex/go-bookstore-oapi/internal/repo/test"
+	"github.com/chernyshev-alex/go-bookstore-oapi/pkg/domain"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
@@ -18,14 +18,14 @@ type output struct {
 }
 
 // After N consecutive failures, circuit breaker should returns Service Not Available error
-func Test_SearchWithCircuitBreaker(t *testing.T) {
+func Test_FindWhenCircuitBreaker(t *testing.T) {
 	tests := []struct {
 		name   string
 		setup  func(*test.FakeBooksSearchRepository)
 		output output
 	}{{"search by author",
-		func(s *test.FakeBooksSearchRepository) { s.SearchByAuthorReturns(nil, errors.New("failed")) },
-		output{nil, &gen.SearchBooksResponse{}},
+		func(s *test.FakeBooksSearchRepository) { s.BooksByAuthorIdReturns(nil, errors.New("failed")) },
+		output{nil, nil},
 	}}
 
 	triggeredServiceNotAvailable := false
@@ -37,9 +37,7 @@ func Test_SearchWithCircuitBreaker(t *testing.T) {
 
 			svc := NewBookService(nil, fakeSearchApi)
 			for i := 0; i < 10; i++ {
-				_, err := svc.SearchBooksByAuthor(context.Background(), gen.SearchBooksByAuthorParams{
-					AuthorId: 1,
-				})
+				_, err := svc.FindBooksByAuthor(context.Background(), "1")
 
 				if err != nil && errors.As(err, &ServiceError{}) {
 					if err.(ServiceError).ErrorCode() == ErrorServiceNotAvailable {
@@ -53,10 +51,10 @@ func Test_SearchWithCircuitBreaker(t *testing.T) {
 	}
 }
 
-func Test_SearchBook(t *testing.T) {
+func Test_FindBook(t *testing.T) {
 	t.Parallel()
 
-	books := []gen.Book{{
+	books := []domain.Book{{
 		Author:      "Author",
 		AuthorId:    0,
 		BookId:      0,
@@ -71,9 +69,9 @@ func Test_SearchBook(t *testing.T) {
 		setup  func(*test.FakeBooksSearchRepository)
 		output output
 	}{{
-		"search by author",
-		func(s *test.FakeBooksSearchRepository) { s.SearchByAuthorReturns(books, nil) },
-		output{books, &gen.SearchBooksResponse{}},
+		"find books by author",
+		func(s *test.FakeBooksSearchRepository) { s.BooksByAuthorIdReturns(books, nil) },
+		output{books, nil},
 	}}
 
 	for _, tt := range tests {
@@ -84,9 +82,7 @@ func Test_SearchBook(t *testing.T) {
 			tt.setup(fakeSearchApi)
 
 			svc := NewBookService(nil, fakeSearchApi)
-			books, err := svc.SearchBooksByAuthor(context.Background(), gen.SearchBooksByAuthorParams{
-				AuthorId: 1,
-			})
+			books, err := svc.FindBooksByAuthor(context.Background(), "1")
 			if err != nil {
 				t.Fatalf("error %v", err.Error())
 			}
@@ -100,7 +96,7 @@ func Test_SearchBook(t *testing.T) {
 func Test_CreateBook(t *testing.T) {
 	t.Parallel()
 
-	book := gen.Book{
+	book := domain.Book{
 		Author:      "Author",
 		AuthorId:    0,
 		BookId:      0,
@@ -160,7 +156,7 @@ func Test_RemoveBook(t *testing.T) {
 			tt.setup(fakeCrudApi)
 
 			svc := NewBookService(fakeCrudApi, nil)
-			err := svc.DeleteBook(context.Background(), 1)
+			err := svc.DeleteBook(context.Background(), "1")
 			if err != nil {
 				t.Fatalf("error %v", err.Error())
 			}

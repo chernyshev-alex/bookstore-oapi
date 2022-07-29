@@ -4,12 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
-	"github.com/chernyshev-alex/go-bookstore-oapi/internal/gen"
+	"github.com/chernyshev-alex/go-bookstore-oapi/internal/logger"
 	"github.com/chernyshev-alex/go-bookstore-oapi/internal/repo"
+	"github.com/chernyshev-alex/go-bookstore-oapi/pkg/domain"
 	"github.com/mercari/go-circuitbreaker"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/zap"
 )
 
 const otelName = "github.com/chernyshev-alex/go-bookstore-oapi/internal/service"
@@ -18,9 +21,9 @@ const otelName = "github.com/chernyshev-alex/go-bookstore-oapi/internal/service"
 //counterfeiter:generate -o test/books.gen.go . BooksService
 
 type BooksService interface {
-	AddBook(context.Context, gen.AddBookRequest) (gen.Book, error)
-	DeleteBook(context.Context, int) error
-	SearchBooksByAuthor(context.Context, gen.SearchBooksByAuthorParams) ([]gen.Book, error)
+	AddBook(context.Context, domain.Book) (domain.Book, error)
+	DeleteBook(context.Context, string) error
+	FindBooksByAuthor(context.Context, string) (domain.Books, error)
 }
 
 // Service error --
@@ -48,7 +51,6 @@ func (se ServiceError) ErrorCode() ErrorCode {
 
 const (
 	ErrorCodeGeneral ErrorCode = iota
-	ErrorCodeNotFound
 	ErrorServiceNotAvailable
 )
 
@@ -67,26 +69,37 @@ func NewBookService(crud repo.BooksCrudRepository, search repo.BooksSearchReposi
 	}
 }
 
-func (s *BookService) SearchBooksByAuthor(ctx context.Context, params gen.SearchBooksByAuthorParams) ([]gen.Book, error) {
+func (s *BookService) FindBooksByAuthor(ctx context.Context, authorId string) ([]domain.Book, error) {
 	defer newOTELSpan(ctx, "Books.SearchByAuthor").End()
 	if !s.cb.Ready() {
-		return []gen.Book{}, NewServiceError(ErrorServiceNotAvailable, "service not available")
+		return []domain.Book{}, NewServiceError(ErrorServiceNotAvailable, "service not available")
 	}
-	var err error
+
+	var (
+		authorIdKey int
+		err         error
+		books       domain.Books = []domain.Book{}
+	)
+
 	defer func() {
 		err = s.cb.Done(ctx, err)
 	}()
-	books, err := s.bookSearch.SearchByAuthor(ctx, params)
-	if err != nil {
-		return []gen.Book{}, err
+
+	if authorIdKey, err = strconv.Atoi(authorId); err != nil {
+		logger.Error("illegal value", err, zap.Int("authorId", authorIdKey))
+		return books, err
 	}
-	return books, nil
+	if books, err = s.bookSearch.BooksByAuthorId(ctx, authorIdKey); err != nil {
+		logger.Error("BooksByAuthorId failed", err)
+		return books, err
+	}
+	return books, err
 }
 
-func (s *BookService) AddBook(ctx context.Context, b gen.Book) (book gen.Book, err error) {
+func (s *BookService) AddBook(ctx context.Context, b domain.Book) (book domain.Book, err error) {
 	defer newOTELSpan(ctx, "Book.Create").End()
 	if !s.cb.Ready() {
-		return gen.Book{}, fmt.Errorf("service not available")
+		return domain.Book{}, fmt.Errorf("service not available")
 	}
 	defer func() {
 		err = s.cb.Done(ctx, err)
@@ -94,12 +107,12 @@ func (s *BookService) AddBook(ctx context.Context, b gen.Book) (book gen.Book, e
 
 	book, err = s.bookCrud.AddBook(ctx, b)
 	if err != nil {
-		return gen.Book{}, err
+		return domain.Book{}, err
 	}
 	return book, nil
 }
 
-func (s *BookService) DeleteBook(ctx context.Context, bookId int) (err error) {
+func (s *BookService) DeleteBook(ctx context.Context, bookId string) (err error) {
 	defer newOTELSpan(ctx, "Book.Remove").End()
 	if !s.cb.Ready() {
 		return fmt.Errorf("service not available")
@@ -109,8 +122,11 @@ func (s *BookService) DeleteBook(ctx context.Context, bookId int) (err error) {
 		err = s.cb.Done(ctx, err)
 	}()
 
-	err = s.bookCrud.DeleteBook(ctx, bookId)
-	return
+	var bookIdKey int
+	if bookIdKey, err = strconv.Atoi(bookId); err == nil {
+		err = s.bookCrud.DeleteBook(ctx, bookIdKey)
+	}
+	return err
 }
 
 func newOTELSpan(ctx context.Context, name string) trace.Span {

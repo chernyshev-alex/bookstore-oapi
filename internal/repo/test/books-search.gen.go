@@ -5,40 +5,40 @@ import (
 	"context"
 	"sync"
 
-	"github.com/chernyshev-alex/go-bookstore-oapi/internal/gen"
 	"github.com/chernyshev-alex/go-bookstore-oapi/internal/repo"
+	"github.com/chernyshev-alex/go-bookstore-oapi/pkg/domain"
 )
 
 type FakeBooksSearchRepository struct {
-	SearchByAuthorStub        func(context.Context, gen.SearchBooksByAuthorParams) ([]gen.Book, error)
-	searchByAuthorMutex       sync.RWMutex
-	searchByAuthorArgsForCall []struct {
+	BooksByAuthorIdStub        func(context.Context, int) ([]domain.Book, error)
+	booksByAuthorIdMutex       sync.RWMutex
+	booksByAuthorIdArgsForCall []struct {
 		arg1 context.Context
-		arg2 gen.SearchBooksByAuthorParams
+		arg2 int
 	}
-	searchByAuthorReturns struct {
-		result1 []gen.Book
+	booksByAuthorIdReturns struct {
+		result1 []domain.Book
 		result2 error
 	}
-	searchByAuthorReturnsOnCall map[int]struct {
-		result1 []gen.Book
+	booksByAuthorIdReturnsOnCall map[int]struct {
+		result1 []domain.Book
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeBooksSearchRepository) SearchByAuthor(arg1 context.Context, arg2 gen.SearchBooksByAuthorParams) ([]gen.Book, error) {
-	fake.searchByAuthorMutex.Lock()
-	ret, specificReturn := fake.searchByAuthorReturnsOnCall[len(fake.searchByAuthorArgsForCall)]
-	fake.searchByAuthorArgsForCall = append(fake.searchByAuthorArgsForCall, struct {
+func (fake *FakeBooksSearchRepository) BooksByAuthorId(arg1 context.Context, arg2 int) ([]domain.Book, error) {
+	fake.booksByAuthorIdMutex.Lock()
+	ret, specificReturn := fake.booksByAuthorIdReturnsOnCall[len(fake.booksByAuthorIdArgsForCall)]
+	fake.booksByAuthorIdArgsForCall = append(fake.booksByAuthorIdArgsForCall, struct {
 		arg1 context.Context
-		arg2 gen.SearchBooksByAuthorParams
+		arg2 int
 	}{arg1, arg2})
-	stub := fake.SearchByAuthorStub
-	fakeReturns := fake.searchByAuthorReturns
-	fake.recordInvocation("SearchByAuthor", []interface{}{arg1, arg2})
-	fake.searchByAuthorMutex.Unlock()
+	stub := fake.BooksByAuthorIdStub
+	fakeReturns := fake.booksByAuthorIdReturns
+	fake.recordInvocation("BooksByAuthorId", []interface{}{arg1, arg2})
+	fake.booksByAuthorIdMutex.Unlock()
 	if stub != nil {
 		return stub(arg1, arg2)
 	}
@@ -48,47 +48,47 @@ func (fake *FakeBooksSearchRepository) SearchByAuthor(arg1 context.Context, arg2
 	return fakeReturns.result1, fakeReturns.result2
 }
 
-func (fake *FakeBooksSearchRepository) SearchByAuthorCallCount() int {
-	fake.searchByAuthorMutex.RLock()
-	defer fake.searchByAuthorMutex.RUnlock()
-	return len(fake.searchByAuthorArgsForCall)
+func (fake *FakeBooksSearchRepository) BooksByAuthorIdCallCount() int {
+	fake.booksByAuthorIdMutex.RLock()
+	defer fake.booksByAuthorIdMutex.RUnlock()
+	return len(fake.booksByAuthorIdArgsForCall)
 }
 
-func (fake *FakeBooksSearchRepository) SearchByAuthorCalls(stub func(context.Context, gen.SearchBooksByAuthorParams) ([]gen.Book, error)) {
-	fake.searchByAuthorMutex.Lock()
-	defer fake.searchByAuthorMutex.Unlock()
-	fake.SearchByAuthorStub = stub
+func (fake *FakeBooksSearchRepository) BooksByAuthorIdCalls(stub func(context.Context, int) ([]domain.Book, error)) {
+	fake.booksByAuthorIdMutex.Lock()
+	defer fake.booksByAuthorIdMutex.Unlock()
+	fake.BooksByAuthorIdStub = stub
 }
 
-func (fake *FakeBooksSearchRepository) SearchByAuthorArgsForCall(i int) (context.Context, gen.SearchBooksByAuthorParams) {
-	fake.searchByAuthorMutex.RLock()
-	defer fake.searchByAuthorMutex.RUnlock()
-	argsForCall := fake.searchByAuthorArgsForCall[i]
+func (fake *FakeBooksSearchRepository) BooksByAuthorIdArgsForCall(i int) (context.Context, int) {
+	fake.booksByAuthorIdMutex.RLock()
+	defer fake.booksByAuthorIdMutex.RUnlock()
+	argsForCall := fake.booksByAuthorIdArgsForCall[i]
 	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *FakeBooksSearchRepository) SearchByAuthorReturns(result1 []gen.Book, result2 error) {
-	fake.searchByAuthorMutex.Lock()
-	defer fake.searchByAuthorMutex.Unlock()
-	fake.SearchByAuthorStub = nil
-	fake.searchByAuthorReturns = struct {
-		result1 []gen.Book
+func (fake *FakeBooksSearchRepository) BooksByAuthorIdReturns(result1 []domain.Book, result2 error) {
+	fake.booksByAuthorIdMutex.Lock()
+	defer fake.booksByAuthorIdMutex.Unlock()
+	fake.BooksByAuthorIdStub = nil
+	fake.booksByAuthorIdReturns = struct {
+		result1 []domain.Book
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeBooksSearchRepository) SearchByAuthorReturnsOnCall(i int, result1 []gen.Book, result2 error) {
-	fake.searchByAuthorMutex.Lock()
-	defer fake.searchByAuthorMutex.Unlock()
-	fake.SearchByAuthorStub = nil
-	if fake.searchByAuthorReturnsOnCall == nil {
-		fake.searchByAuthorReturnsOnCall = make(map[int]struct {
-			result1 []gen.Book
+func (fake *FakeBooksSearchRepository) BooksByAuthorIdReturnsOnCall(i int, result1 []domain.Book, result2 error) {
+	fake.booksByAuthorIdMutex.Lock()
+	defer fake.booksByAuthorIdMutex.Unlock()
+	fake.BooksByAuthorIdStub = nil
+	if fake.booksByAuthorIdReturnsOnCall == nil {
+		fake.booksByAuthorIdReturnsOnCall = make(map[int]struct {
+			result1 []domain.Book
 			result2 error
 		})
 	}
-	fake.searchByAuthorReturnsOnCall[i] = struct {
-		result1 []gen.Book
+	fake.booksByAuthorIdReturnsOnCall[i] = struct {
+		result1 []domain.Book
 		result2 error
 	}{result1, result2}
 }
@@ -96,8 +96,8 @@ func (fake *FakeBooksSearchRepository) SearchByAuthorReturnsOnCall(i int, result
 func (fake *FakeBooksSearchRepository) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.searchByAuthorMutex.RLock()
-	defer fake.searchByAuthorMutex.RUnlock()
+	fake.booksByAuthorIdMutex.RLock()
+	defer fake.booksByAuthorIdMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

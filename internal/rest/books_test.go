@@ -6,8 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/chernyshev-alex/go-bookstore-oapi/internal/gen"
 	"github.com/chernyshev-alex/go-bookstore-oapi/internal/service/test"
+	"github.com/chernyshev-alex/go-bookstore-oapi/pkg/domain"
 	"github.com/gin-gonic/gin"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
@@ -18,9 +18,7 @@ const (
 	JSON_APP_CONTENT = "application/json"
 )
 
-const baseURL = "http://127.0.0.1:8080"
-
-func TestTasks_Search(t *testing.T) {
+func TestTasks_FindBooksByAuthorId(t *testing.T) {
 	t.Parallel()
 
 	type output struct {
@@ -29,15 +27,15 @@ func TestTasks_Search(t *testing.T) {
 		target         interface{}
 	}
 
-	book := gen.Book{
+	books := domain.Books{{
+		AuthorId:    2,
+		BookId:      1,
+		PublisherId: 3,
 		Author:      "Author",
-		AuthorId:    0,
-		BookId:      0,
 		Publisher:   "Publisher",
-		PublisherId: 0,
 		Title:       "Title",
 		Year:        1901,
-	}
+	}}
 
 	tests := []struct {
 		name   string
@@ -45,11 +43,11 @@ func TestTasks_Search(t *testing.T) {
 		output output
 	}{{
 		"OK: 200",
-		func(s *test.FakeBooksService) { s.SearchBooksByAuthorReturns([]gen.Book{book}, nil) },
+		func(s *test.FakeBooksService) { s.FindBooksByAuthorReturns(books, nil) },
 		output{
 			http.StatusOK,
-			&gen.SearchBooksResponse{book},
-			&gen.SearchBooksResponse{},
+			domainSliceToJsonBooks(books),
+			nil,
 		},
 	}}
 
@@ -62,14 +60,7 @@ func TestTasks_Search(t *testing.T) {
 
 			handler := NewBooksHandler(fakeBooService)
 
-			// params := rest.SearchBooksByAuthorParams{
-			// 	AuthorId: 100000,
-			// }
-
 			rq, err := http.NewRequest("GET", "/search/books?authorId=1", nil)
-
-			//	rq, err := rest.NewSearchBooksByAuthorRequest(baseURL, &params)
-			//rq, err := rest.SearchBooksByAuthor(params)
 			if err != nil {
 				t.Errorf("request error %v", err.Error())
 			}
@@ -83,12 +74,12 @@ func TestTasks_Search(t *testing.T) {
 	}
 }
 
-func sendRequest(req *http.Request, spi gen.ServerInterface) *http.Response {
+func sendRequest(req *http.Request, spi ServerInterface) *http.Response {
 	w := httptest.NewRecorder()
 	ctx, e := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	gen.RegisterHandlers(e, spi)
+	RegisterHandlers(e, spi)
 	e.ServeHTTP(w, req)
 	return w.Result()
 }

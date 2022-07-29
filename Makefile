@@ -10,3 +10,6 @@ tidy:
 
 server:
 	go run cmd/srv/main.go
+
+dbinit:
+	sqlite3 -echo -init sql/init.sql data/books.db

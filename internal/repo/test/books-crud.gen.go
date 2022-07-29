@@ -5,23 +5,23 @@ import (
 	"context"
 	"sync"
 
-	"github.com/chernyshev-alex/go-bookstore-oapi/internal/gen"
 	"github.com/chernyshev-alex/go-bookstore-oapi/internal/repo"
+	"github.com/chernyshev-alex/go-bookstore-oapi/pkg/domain"
 )
 
 type FakeBooksCrudRepository struct {
-	AddBookStub        func(context.Context, gen.Book) (gen.Book, error)
+	AddBookStub        func(context.Context, domain.Book) (domain.Book, error)
 	addBookMutex       sync.RWMutex
 	addBookArgsForCall []struct {
 		arg1 context.Context
-		arg2 gen.Book
+		arg2 domain.Book
 	}
 	addBookReturns struct {
-		result1 gen.Book
+		result1 domain.Book
 		result2 error
 	}
 	addBookReturnsOnCall map[int]struct {
-		result1 gen.Book
+		result1 domain.Book
 		result2 error
 	}
 	DeleteBookStub        func(context.Context, int) error
@@ -40,12 +40,12 @@ type FakeBooksCrudRepository struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeBooksCrudRepository) AddBook(arg1 context.Context, arg2 gen.Book) (gen.Book, error) {
+func (fake *FakeBooksCrudRepository) AddBook(arg1 context.Context, arg2 domain.Book) (domain.Book, error) {
 	fake.addBookMutex.Lock()
 	ret, specificReturn := fake.addBookReturnsOnCall[len(fake.addBookArgsForCall)]
 	fake.addBookArgsForCall = append(fake.addBookArgsForCall, struct {
 		arg1 context.Context
-		arg2 gen.Book
+		arg2 domain.Book
 	}{arg1, arg2})
 	stub := fake.AddBookStub
 	fakeReturns := fake.addBookReturns
@@ -66,41 +66,41 @@ func (fake *FakeBooksCrudRepository) AddBookCallCount() int {
 	return len(fake.addBookArgsForCall)
 }
 
-func (fake *FakeBooksCrudRepository) AddBookCalls(stub func(context.Context, gen.Book) (gen.Book, error)) {
+func (fake *FakeBooksCrudRepository) AddBookCalls(stub func(context.Context, domain.Book) (domain.Book, error)) {
 	fake.addBookMutex.Lock()
 	defer fake.addBookMutex.Unlock()
 	fake.AddBookStub = stub
 }
 
-func (fake *FakeBooksCrudRepository) AddBookArgsForCall(i int) (context.Context, gen.Book) {
+func (fake *FakeBooksCrudRepository) AddBookArgsForCall(i int) (context.Context, domain.Book) {
 	fake.addBookMutex.RLock()
 	defer fake.addBookMutex.RUnlock()
 	argsForCall := fake.addBookArgsForCall[i]
 	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *FakeBooksCrudRepository) AddBookReturns(result1 gen.Book, result2 error) {
+func (fake *FakeBooksCrudRepository) AddBookReturns(result1 domain.Book, result2 error) {
 	fake.addBookMutex.Lock()
 	defer fake.addBookMutex.Unlock()
 	fake.AddBookStub = nil
 	fake.addBookReturns = struct {
-		result1 gen.Book
+		result1 domain.Book
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeBooksCrudRepository) AddBookReturnsOnCall(i int, result1 gen.Book, result2 error) {
+func (fake *FakeBooksCrudRepository) AddBookReturnsOnCall(i int, result1 domain.Book, result2 error) {
 	fake.addBookMutex.Lock()
 	defer fake.addBookMutex.Unlock()
 	fake.AddBookStub = nil
 	if fake.addBookReturnsOnCall == nil {
 		fake.addBookReturnsOnCall = make(map[int]struct {
-			result1 gen.Book
+			result1 domain.Book
 			result2 error
 		})
 	}
 	fake.addBookReturnsOnCall[i] = struct {
-		result1 gen.Book
+		result1 domain.Book
 		result2 error
 	}{result1, result2}
 }

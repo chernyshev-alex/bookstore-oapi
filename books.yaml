@@ -17,13 +17,13 @@ info:
 paths:
   /search/books:
     get:
-      operationId: SearchBooksByAuthor
+      operationId:  BooksByAuthorId
       parameters:
       - in: query
         name: authorId
         required: true
         schema:
-          type: integer
+          type: string
       responses:
         "200":
           $ref: '#/components/responses/SearchBooksResponse'
@@ -50,11 +50,7 @@ paths:
     delete:
       operationId: DeleteBook
       parameters:
-      - in: path
-        name: bookId
-        required: true
-        schema:
-          type: integer
+        - $ref: "#/components/parameters/bookId"
       responses:
         "200":
           description: removed
@@ -64,13 +60,22 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
 
 components:
+  parameters:
+    bookId:
+      in: path
+      name:  bookId
+      required: true
+      schema:
+        type: string
+      description: book id
+  
   requestBodies:
     AddBookRequest:
       required: true
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Book'
+            $ref: '#/components/schemas/BookJson'
 
   responses:
     AddBookResponse:
@@ -78,9 +83,10 @@ components:
       content:
         application/json:
           schema:
+            required: [book]
             properties:
               book:
-                $ref: '#/components/schemas/Book'
+                $ref: '#/components/schemas/BookJson'
 
     SearchBooksResponse:
       description: search books response
@@ -89,24 +95,29 @@ components:
           schema:
             type: array
             items:
-              $ref: '#/components/schemas/Book'
+              $ref: '#/components/schemas/BookJson'
 
     ErrorResponse:
       description: Response when errors happen.
       content:
         application/json:
           schema:
+            required: [error]
             properties:
               error:
                 type: string
 
   schemas:
-    Book:
+    BookJson:
       type: object
       properties:
-        bookId:
+        id : 
           type: integer
+        isbn:
+          type: string
         title:
+          type: string
+        descr: 
           type: string
         publisherId:
           type: integer
@@ -118,13 +129,7 @@ components:
           type: string
         year:
           type: integer
-      required:
-        - bookId 
-        - title
-        - publisherId
-        - publisher
-        - authorId
-        - author
-        - year
+      required: [id, isbn, title, descr, publisher, publisherId, author, authorId, year]
+
    
 

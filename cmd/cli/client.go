@@ -17,7 +17,6 @@ import (
 )
 
 //go:generate go run github.com/deepmap/oapi-codegen/cmd/oapi-codegen --config=client-gen.conf  ../../books.yaml
-////////go:generate go run github.com/deepmap/oapi-codegen/cmd/oapi-codegen --config=client-types-gen.conf  ../../books.yaml
 
 func main() {
 

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/chernyshev-alex/go-bookstore-oapi/internal/env"
-	"github.com/chernyshev-alex/go-bookstore-oapi/internal/gen"
 	"github.com/chernyshev-alex/go-bookstore-oapi/internal/logger"
 	"github.com/chernyshev-alex/go-bookstore-oapi/internal/otel"
 	"github.com/chernyshev-alex/go-bookstore-oapi/internal/repo"
@@ -31,7 +30,7 @@ type serverConfig struct {
 	//	Memcached     *memcache.Client
 	metrics     http.Handler
 	middlewares gin.HandlersChain
-	handler     gen.ServerInterface
+	handler     rest.ServerInterface
 }
 
 func NewServer(conf *serverConfig) *http.Server {
@@ -40,7 +39,7 @@ func NewServer(conf *serverConfig) *http.Server {
 		r.Use(mw)
 	}
 
-	r = gen.RegisterHandlers(r, conf.handler)
+	r = rest.RegisterHandlers(r, conf.handler)
 	registerSwaggerApi(r)
 
 	lmt := tollbooth.NewLimiter(conf.env.MAX_LIMITER, &limiter.ExpirableOptions{DefaultExpirationTTL: time.Second})
@@ -64,7 +63,7 @@ func initDb(env *env.EnvConfig) *xorm.Engine {
 	if err != nil {
 		log.Panic("db connect failed", db_zap_info, zap.Error(err))
 	}
-	err = repo.MayBeMigrate(engine)
+	err = repo.DoMigrate(engine)
 	if err != nil {
 		logger.Panic("db migraton failed", db_zap_info, zap.Error(err))
 	}
@@ -86,8 +85,6 @@ func registerSwaggerApi(router *gin.Engine) {
 }
 
 func startServices(env *env.EnvConfig) {
-	//logger, _ := zap.NewProduction()
-
 	swagger, err := api.GetSwagger()
 	if err != nil {
 		logger.Panic("Error loading swagger spec", zap.Error(err))
@@ -108,12 +105,11 @@ func startServices(env *env.EnvConfig) {
 
 	logger.Info("init telemetry")
 	promExporter, err := otel.NewOTExporter(env)
-
 	if err != nil {
 		logger.Panic("telemetry failed", zap.Error(err))
 	}
 
-	// log all requests
+	// TODO : log all requests
 	var logRequests gin.HandlerFunc = func(g *gin.Context) {
 		logger.Info(g.Request.Method, zap.Time("time", time.Now()),
 			zap.String("url", g.Request.URL.String()),
