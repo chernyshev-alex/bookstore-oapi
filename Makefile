@@ -11,5 +11,8 @@ tidy:
 server:
 	go run cmd/srv/main.go
 
-dbinit:
+dbcreate:
 	sqlite3 -echo -init sql/init.sql data/books.db
+
+dbboil:
+	sqlboiler  -o internal/models  sqlite3

@@ -1,30 +1,43 @@
 package env
 
 import (
+	"fmt"
+
 	"github.com/spf13/viper"
 )
 
-type EnvConfig struct {
-	HTTP_ADDRESS      string
-	MAX_LIMITER       float64
-	DB_DRIVER         string
-	DATABASE_NAME     string
-	DATABASE_USERNAME string
-	DATABASE_PASSWORD string
-	JAEGER_ENDPOINT   string
-	MEMCACHED_HOST    string
+type DbConfig struct {
+	Driver string
+	Host   string
+	Port   int
+	User   string `mapstructure:"username"`
+	Pass   string `mapstructure:"password"`
+	Dbname string
+}
+type ServerConfig struct {
+	Host           string `mapstructure:"hostname"`
+	Port           int    `mapstructure:"port"`
+	JaegerEndPoint string `mapstructure:"jaeger"`
+	MemcachedHost  string
+	Prometeus      string `mapstructure:"prometeus"`
+	HttpLimiter    float64
+}
+type Config struct {
+	Db     DbConfig     `mapstructure:"database"`
+	Server ServerConfig `mapstructure:"server"`
 }
 
-func LoadConfig(configPath string) (*EnvConfig, error) {
-	viper.SetConfigFile(configPath)
-	if err := viper.ReadInConfig(); err != nil {
+func LoadConfig(configPath string) (c *Config, e error) {
+	v := viper.New()
+	v.SetConfigFile(configPath)
+	v.AddConfigPath(".")
+
+	if err := v.ReadInConfig(); err != nil {
 		return nil, err
 	}
-	return &EnvConfig{
-		HTTP_ADDRESS:      viper.GetString("HTTP_ADDRESS"),
-		MAX_LIMITER:       viper.GetFloat64("MAX_LIMITER"),
-		DB_DRIVER:         viper.GetString("DB_DRIVER"),
-		DATABASE_NAME:     viper.GetString("DB_DATASOURCE"),
-		DATABASE_USERNAME: viper.GetString("DATABASE_USERNAME"),
-	}, nil
+
+	if err := v.Unmarshal(&c); err != nil {
+		fmt.Printf("couldn't read config: %s", err)
+	}
+	return c, nil
 }

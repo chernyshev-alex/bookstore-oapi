@@ -1,0 +1,17 @@
+
+[database]
+driver = sqlite3
+host = 
+port =
+username = 
+password =
+dbname = "data/books.db"
+
+[server]
+host = 0.0.0.0
+port = 8080
+username = 
+password =
+httplimiter = 3.0
+memcacheHost = localhost:11211
+prometeus = 

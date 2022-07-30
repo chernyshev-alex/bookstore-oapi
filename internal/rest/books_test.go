@@ -6,8 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/chernyshev-alex/go-bookstore-oapi/internal/models"
 	"github.com/chernyshev-alex/go-bookstore-oapi/internal/service/test"
-	"github.com/chernyshev-alex/go-bookstore-oapi/pkg/domain"
 	"github.com/gin-gonic/gin"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
@@ -27,15 +27,7 @@ func TestTasks_FindBooksByAuthorId(t *testing.T) {
 		target         interface{}
 	}
 
-	books := domain.Books{{
-		AuthorId:    2,
-		BookId:      1,
-		PublisherId: 3,
-		Author:      "Author",
-		Publisher:   "Publisher",
-		Title:       "Title",
-		Year:        1901,
-	}}
+	books := []*models.Book{{Authorid: 1000}}
 
 	tests := []struct {
 		name   string
@@ -46,7 +38,7 @@ func TestTasks_FindBooksByAuthorId(t *testing.T) {
 		func(s *test.FakeBooksService) { s.FindBooksByAuthorReturns(books, nil) },
 		output{
 			http.StatusOK,
-			domainSliceToJsonBooks(books),
+			sliceToJsonBooks(books),
 			nil,
 		},
 	}}

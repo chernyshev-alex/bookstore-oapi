@@ -5,35 +5,35 @@ import (
 	"context"
 	"sync"
 
+	"github.com/chernyshev-alex/go-bookstore-oapi/internal/models"
 	"github.com/chernyshev-alex/go-bookstore-oapi/internal/repo"
-	"github.com/chernyshev-alex/go-bookstore-oapi/pkg/domain"
 )
 
 type FakeBooksSearchRepository struct {
-	BooksByAuthorIdStub        func(context.Context, int) ([]domain.Book, error)
+	BooksByAuthorIdStub        func(context.Context, int64) ([]*models.Book, error)
 	booksByAuthorIdMutex       sync.RWMutex
 	booksByAuthorIdArgsForCall []struct {
 		arg1 context.Context
-		arg2 int
+		arg2 int64
 	}
 	booksByAuthorIdReturns struct {
-		result1 []domain.Book
+		result1 []*models.Book
 		result2 error
 	}
 	booksByAuthorIdReturnsOnCall map[int]struct {
-		result1 []domain.Book
+		result1 []*models.Book
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeBooksSearchRepository) BooksByAuthorId(arg1 context.Context, arg2 int) ([]domain.Book, error) {
+func (fake *FakeBooksSearchRepository) BooksByAuthorId(arg1 context.Context, arg2 int64) ([]*models.Book, error) {
 	fake.booksByAuthorIdMutex.Lock()
 	ret, specificReturn := fake.booksByAuthorIdReturnsOnCall[len(fake.booksByAuthorIdArgsForCall)]
 	fake.booksByAuthorIdArgsForCall = append(fake.booksByAuthorIdArgsForCall, struct {
 		arg1 context.Context
-		arg2 int
+		arg2 int64
 	}{arg1, arg2})
 	stub := fake.BooksByAuthorIdStub
 	fakeReturns := fake.booksByAuthorIdReturns
@@ -54,41 +54,41 @@ func (fake *FakeBooksSearchRepository) BooksByAuthorIdCallCount() int {
 	return len(fake.booksByAuthorIdArgsForCall)
 }
 
-func (fake *FakeBooksSearchRepository) BooksByAuthorIdCalls(stub func(context.Context, int) ([]domain.Book, error)) {
+func (fake *FakeBooksSearchRepository) BooksByAuthorIdCalls(stub func(context.Context, int64) ([]*models.Book, error)) {
 	fake.booksByAuthorIdMutex.Lock()
 	defer fake.booksByAuthorIdMutex.Unlock()
 	fake.BooksByAuthorIdStub = stub
 }
 
-func (fake *FakeBooksSearchRepository) BooksByAuthorIdArgsForCall(i int) (context.Context, int) {
+func (fake *FakeBooksSearchRepository) BooksByAuthorIdArgsForCall(i int) (context.Context, int64) {
 	fake.booksByAuthorIdMutex.RLock()
 	defer fake.booksByAuthorIdMutex.RUnlock()
 	argsForCall := fake.booksByAuthorIdArgsForCall[i]
 	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *FakeBooksSearchRepository) BooksByAuthorIdReturns(result1 []domain.Book, result2 error) {
+func (fake *FakeBooksSearchRepository) BooksByAuthorIdReturns(result1 []*models.Book, result2 error) {
 	fake.booksByAuthorIdMutex.Lock()
 	defer fake.booksByAuthorIdMutex.Unlock()
 	fake.BooksByAuthorIdStub = nil
 	fake.booksByAuthorIdReturns = struct {
-		result1 []domain.Book
+		result1 []*models.Book
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeBooksSearchRepository) BooksByAuthorIdReturnsOnCall(i int, result1 []domain.Book, result2 error) {
+func (fake *FakeBooksSearchRepository) BooksByAuthorIdReturnsOnCall(i int, result1 []*models.Book, result2 error) {
 	fake.booksByAuthorIdMutex.Lock()
 	defer fake.booksByAuthorIdMutex.Unlock()
 	fake.BooksByAuthorIdStub = nil
 	if fake.booksByAuthorIdReturnsOnCall == nil {
 		fake.booksByAuthorIdReturnsOnCall = make(map[int]struct {
-			result1 []domain.Book
+			result1 []*models.Book
 			result2 error
 		})
 	}
 	fake.booksByAuthorIdReturnsOnCall[i] = struct {
-		result1 []domain.Book
+		result1 []*models.Book
 		result2 error
 	}{result1, result2}
 }

@@ -32,12 +32,12 @@ func (h *BookHandler) AddBook(c *gin.Context) {
 	}
 	defer c.Request.Body.Close()
 
-	b, err := h.booksSpi.AddBook(c.Request.Context(), addBookRequestToDomain(&rq))
+	b, err := h.booksSpi.AddBook(c.Request.Context(), addBookRequestToDomain(rq))
 	if err != nil {
 		httpError(c.Writer, err, http.StatusInternalServerError)
 		return
 	}
-	responseJson(c.Writer, http.StatusOK, AddBookResponse{Book: domainToJsonBook(&b)})
+	responseJson(c.Writer, http.StatusOK, AddBookResponse{Book: toJsonBook(*b)})
 }
 
 func (h *BookHandler) DeleteBook(c *gin.Context, bookId BookId) {
@@ -54,7 +54,7 @@ func (h *BookHandler) BooksByAuthorId(c *gin.Context, params BooksByAuthorIdPara
 		httpError(c.Writer, err, http.StatusInternalServerError)
 		return
 	}
-	responseJson(c.Writer, http.StatusOK, domainSliceToJsonBooks(books))
+	responseJson(c.Writer, http.StatusOK, sliceToJsonBooks(books))
 }
 
 func httpError(w http.ResponseWriter, e error, httpStatus int) {

@@ -21,7 +21,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )
 
-func NewOTExporter(env *env.EnvConfig) (*prometheus.Exporter, error) {
+func NewOTExporter(env *env.ServerConfig) (*prometheus.Exporter, error) {
 	if err := runtime.Start(runtime.WithMinimumReadMemStatsInterval(time.Second)); err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func NewOTExporter(env *env.EnvConfig) (*prometheus.Exporter, error) {
 
 	global.SetMeterProvider(promExporter.MeterProvider())
 
-	jaegerEndpoint := env.JAEGER_ENDPOINT
+	jaegerEndpoint := env.JaegerEndPoint
 
 	jaegerExporter, err := jaeger.New(
 		jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(jaegerEndpoint)),

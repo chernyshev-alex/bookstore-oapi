@@ -2,11 +2,12 @@ package repo
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/chernyshev-alex/go-bookstore-oapi/internal/logger"
-	"github.com/chernyshev-alex/go-bookstore-oapi/pkg/domain"
-	"go.uber.org/zap"
-	"xorm.io/xorm"
+	"github.com/chernyshev-alex/go-bookstore-oapi/internal/models"
+	"github.com/volatiletech/null/v8"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
 //go:generate counterfeiter -generate
@@ -14,61 +15,44 @@ import (
 //counterfeiter:generate -o test/books-crud.gen.go . BooksCrudRepository
 
 type BooksSearchRepository interface {
-	BooksByAuthorId(context.Context, int) ([]domain.Book, error)
+	BooksByAuthorId(context.Context, int64) ([]*models.Book, error)
 }
 
 type BooksCrudRepository interface {
-	AddBook(context.Context, domain.Book) (domain.Book, error)
-	DeleteBook(context.Context, int) error
+	AddBook(context.Context, models.Book) (models.Book, error)
+	DeleteBook(context.Context, int64) (int64, error)
 }
 
 type DbaRepository struct {
-	xorm *xorm.Engine
 }
 
-func NewRepository(x *xorm.Engine) *DbaRepository {
-	return &DbaRepository{
-		xorm: x,
-	}
+func NewRepository(x *sql.DB) *DbaRepository {
+	boil.SetDB(x) // set as global
+	return &DbaRepository{}
 }
-
-const (
-	TBL_BOOKS = "BOOKS"
-)
 
 var (
 	_ BooksCrudRepository   = (NewRepository)(nil)
 	_ BooksSearchRepository = (NewRepository)(nil)
 )
 
-func (r *DbaRepository) AddBook(ctx context.Context, book domain.Book) (domain.Book, error) {
-	_, err := r.xorm.Insert(book)
-	if err != nil {
-		logger.Error("AddBook failed", err)
-		return domain.Book{}, err
-	}
-	logger.Debug("AddBook OK", zap.Any("book", book))
-	return book, nil
+func (r *DbaRepository) AddBook(ctx context.Context, book models.Book) (models.Book, error) {
+	err := book.InsertG(ctx, boil.Infer())
+	return book, err
 }
 
-// TODO : bookId should be string
-// TODO : use Fluent SQL
-func (r *DbaRepository) DeleteBook(ctx context.Context, bookId int) error {
-	_, err := r.xorm.Table(TBL_BOOKS).Delete(bookId)
-	if err != nil {
-		logger.Error("DeleteBook failed", err)
-		return err
+func (r *DbaRepository) DeleteBook(ctx context.Context, Id int64) (int64, error) {
+	var book models.Book = models.Book{
+		ID: null.Int64From(Id),
 	}
-	return nil
+	return book.DeleteG(ctx)
 }
 
-func (r *DbaRepository) BooksByAuthorId(ctx context.Context, authorId int) ([]domain.Book, error) {
-	books := []domain.Book{}
-	err := r.xorm.Find(books, authorId)
+func (r *DbaRepository) BooksByAuthorId(ctx context.Context, authorId int64) (booksResult []*models.Book, e error) {
+	books, err := models.Books(models.BookWhere.Authorid.EQ(int64(authorId))).AllG(ctx)
 	if err != nil {
 		logger.Error("SearchByAuthor failed", err)
 		return nil, err
 	}
-	logger.Info("SearchByAuthor OK", zap.Any("[]books", books))
 	return books, nil
 }

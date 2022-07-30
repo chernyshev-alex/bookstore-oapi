@@ -1,7 +1,9 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -21,12 +23,10 @@ import (
 	"gopkg.in/yaml.v2"
 
 	_ "github.com/mattn/go-sqlite3"
-	"xorm.io/xorm"
 )
 
 type serverConfig struct {
-	env *env.EnvConfig
-	db  *xorm.Engine
+	env *env.Config
 	//	Memcached     *memcache.Client
 	metrics     http.Handler
 	middlewares gin.HandlersChain
@@ -42,13 +42,16 @@ func NewServer(conf *serverConfig) *http.Server {
 	r = rest.RegisterHandlers(r, conf.handler)
 	registerSwaggerApi(r)
 
-	lmt := tollbooth.NewLimiter(conf.env.MAX_LIMITER, &limiter.ExpirableOptions{DefaultExpirationTTL: time.Second})
+	lmt := tollbooth.NewLimiter(conf.env.Server.HttpLimiter,
+		&limiter.ExpirableOptions{DefaultExpirationTTL: time.Second})
 	lmtmw := tollbooth.LimitHandler(lmt, r)
 
-	logger.Info("starting server on", zap.String("address", conf.env.HTTP_ADDRESS))
+	address := fmt.Sprintf("%s:%d", conf.env.Server.Host, conf.env.Server.Port)
+	logger.Info("starting server on", zap.String("address", address))
+
 	return &http.Server{
 		Handler:           lmtmw,
-		Addr:              conf.env.HTTP_ADDRESS,
+		Addr:              address,
 		ReadTimeout:       1 * time.Second,
 		ReadHeaderTimeout: 1 * time.Second,
 		WriteTimeout:      1 * time.Second,
@@ -56,18 +59,14 @@ func NewServer(conf *serverConfig) *http.Server {
 	}
 }
 
-func initDb(env *env.EnvConfig) *xorm.Engine {
-	db_zap_info := zap.Strings("xorm", []string{env.DB_DRIVER, env.DATABASE_NAME, env.DATABASE_USERNAME})
+func initDb(conf *env.DbConfig) *sql.DB {
+	logger.Info("starting  db  : ", zap.Any("conf", conf))
 
-	engine, err := xorm.NewEngine(env.DB_DRIVER, env.DATABASE_NAME)
+	db, err := sql.Open(conf.Driver, conf.Dbname)
 	if err != nil {
-		log.Panic("db connect failed", db_zap_info, zap.Error(err))
+		logger.Panic("db connect failed", zap.Error(err))
 	}
-	err = repo.DoMigrate(engine)
-	if err != nil {
-		logger.Panic("db migraton failed", db_zap_info, zap.Error(err))
-	}
-	return engine
+	return db
 }
 
 func registerSwaggerApi(router *gin.Engine) {
@@ -84,18 +83,18 @@ func registerSwaggerApi(router *gin.Engine) {
 	})
 }
 
-func startServices(env *env.EnvConfig) {
+func startServices(conf *env.Config) {
 	swagger, err := api.GetSwagger()
 	if err != nil {
 		logger.Panic("Error loading swagger spec", zap.Error(err))
 	}
 	swagger.Servers = nil
 
-	logger.Info("init databases")
-	db_engine := initDb(env)
+	logger.Info("init db", zap.Any("conf", conf.Db))
+	db := initDb(&conf.Db)
 
 	logger.Info("init repositories")
-	repo := repo.NewRepository(db_engine)
+	repo := repo.NewRepository(db)
 
 	logger.Info("init services")
 	svc := service.NewBookService(repo, repo)
@@ -104,7 +103,7 @@ func startServices(env *env.EnvConfig) {
 	bookStoreAPI := rest.NewBooksHandler(svc)
 
 	logger.Info("init telemetry")
-	promExporter, err := otel.NewOTExporter(env)
+	promExporter, err := otel.NewOTExporter(&conf.Server)
 	if err != nil {
 		logger.Panic("telemetry failed", zap.Error(err))
 	}
@@ -117,8 +116,7 @@ func startServices(env *env.EnvConfig) {
 	}
 
 	srv_conf := serverConfig{
-		env:     env,
-		db:      db_engine,
+		env:     conf,
 		metrics: promExporter,
 		handler: bookStoreAPI,
 		middlewares: gin.HandlersChain{
@@ -146,7 +144,7 @@ func main() {
 	}
 
 	if len(address) > 0 { // override
-		env.HTTP_ADDRESS = address
+		env.Server.Host = address
 	}
 	startServices(env)
 }

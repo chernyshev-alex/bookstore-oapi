@@ -70,6 +70,7 @@ require (
 	github.com/volatiletech/inflect v0.0.1 // indirect
 	github.com/volatiletech/null/v8 v8.1.2 // indirect
 	github.com/volatiletech/randomize v0.0.1 // indirect
+	github.com/volatiletech/sqlboiler v3.7.1+incompatible // indirect
 	github.com/volatiletech/sqlboiler/v4 v4.12.0 // indirect
 	github.com/volatiletech/strmangle v0.0.4 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
@@ -77,6 +78,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20220517211312-f3a8303e98df // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
+	modernc.org/sqlite v1.14.5 // indirect
 	xorm.io/builder v0.3.11-0.20220531020008-1bd24a7dc978 // indirect
 )
 

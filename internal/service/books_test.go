@@ -5,8 +5,9 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/chernyshev-alex/go-bookstore-oapi/internal/models"
 	"github.com/chernyshev-alex/go-bookstore-oapi/internal/repo/test"
-	"github.com/chernyshev-alex/go-bookstore-oapi/pkg/domain"
+	"github.com/volatiletech/null/v8"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
@@ -54,15 +55,7 @@ func Test_FindWhenCircuitBreaker(t *testing.T) {
 func Test_FindBook(t *testing.T) {
 	t.Parallel()
 
-	books := []domain.Book{{
-		Author:      "Author",
-		AuthorId:    0,
-		BookId:      0,
-		Publisher:   "Publisher",
-		PublisherId: 0,
-		Title:       "Title",
-		Year:        1901,
-	}}
+	books := []*models.Book{{Bookid: 1}}
 
 	tests := []struct {
 		name   string
@@ -96,14 +89,13 @@ func Test_FindBook(t *testing.T) {
 func Test_CreateBook(t *testing.T) {
 	t.Parallel()
 
-	book := domain.Book{
-		Author:      "Author",
-		AuthorId:    0,
-		BookId:      0,
-		Publisher:   "Publisher",
-		PublisherId: 0,
-		Title:       "Title",
-		Year:        1901,
+	book := models.Book{
+		Bookid:      2,
+		Publisher:   null.StringFrom("publisher_2"),
+		Publisherid: 0,
+		Title:       null.StringFrom("title_2"),
+		Year:        2011,
+		Isbn:        "isbn-2",
 	}
 
 	tests := []struct {
@@ -144,7 +136,7 @@ func Test_RemoveBook(t *testing.T) {
 		expected interface{}
 	}{{
 		"delete book",
-		func(s *test.FakeBooksCrudRepository) { s.DeleteBookReturns(nil) },
+		func(s *test.FakeBooksCrudRepository) { s.DeleteBookReturns(1, nil) },
 		nil,
 	}}
 
