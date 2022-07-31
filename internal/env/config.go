@@ -16,10 +16,10 @@ type DbConfig struct {
 }
 type ServerConfig struct {
 	Host           string `mapstructure:"hostname"`
-	Port           int    `mapstructure:"port"`
+	Port           int
 	JaegerEndPoint string `mapstructure:"jaeger"`
-	MemcachedHost  string
-	Prometeus      string `mapstructure:"prometeus"`
+	MemcachedHost  string `mapstructure:"memcache"`
+	Prometeus      string
 	HttpLimiter    float64
 }
 type Config struct {
@@ -28,16 +28,18 @@ type Config struct {
 }
 
 func LoadConfig(configPath string) (c *Config, e error) {
+	fmt.Printf("*** configPath *** %s \n", configPath)
+
 	v := viper.New()
 	v.SetConfigFile(configPath)
-	v.AddConfigPath(".")
 
 	if err := v.ReadInConfig(); err != nil {
+		fmt.Printf("*** ReadInConfig *** %v\n", err)
 		return nil, err
 	}
 
 	if err := v.Unmarshal(&c); err != nil {
-		fmt.Printf("couldn't read config: %s", err)
+		fmt.Printf("couldn't read config: %s\n", err)
 	}
 	return c, nil
 }

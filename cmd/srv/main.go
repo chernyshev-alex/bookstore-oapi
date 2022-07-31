@@ -134,7 +134,7 @@ func startServices(conf *env.Config) {
 func main() {
 	var confPath, address string
 
-	flag.StringVar(&confPath, "conf", ".env", "config file")
+	flag.StringVar(&confPath, "conf", "app-conf.toml", "config file")
 	flag.StringVar(&address, "address", "", "HTTP Server Address")
 	flag.Parse()
 
