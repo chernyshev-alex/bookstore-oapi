@@ -10,8 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-//go:generate go run github.com/deepmap/oapi-codegen/cmd/oapi-codegen --config=server-gen.conf  ../../books.yaml
-
 type BookHandler struct {
 	booksSpi service.BooksService
 }
@@ -27,6 +25,7 @@ func NewBooksHandler(spi service.BooksService) *BookHandler {
 func (h *BookHandler) AddBook(c *gin.Context) {
 	var rq AddBookRequest
 	if err := json.NewDecoder(c.Request.Body).Decode(&rq); err != nil {
+		// c.Abort()
 		httpError(c.Writer, err, http.StatusBadRequest)
 		return
 	}
@@ -34,7 +33,8 @@ func (h *BookHandler) AddBook(c *gin.Context) {
 
 	b, err := h.booksSpi.AddBook(c.Request.Context(), addBookRequestToDomain(rq))
 	if err != nil {
-		httpError(c.Writer, err, http.StatusInternalServerError)
+		c.Abort()
+		//httpError(c.Writer, err, http.StatusInternalServerError)
 		return
 	}
 	responseJson(c.Writer, http.StatusOK, AddBookResponse{Book: toJsonBook(*b)})
@@ -42,7 +42,8 @@ func (h *BookHandler) AddBook(c *gin.Context) {
 
 func (h *BookHandler) DeleteBook(c *gin.Context, bookId BookId) {
 	if err := h.booksSpi.DeleteBook(c.Request.Context(), bookId); err != nil {
-		http.Error(c.Writer, err.Error(), http.StatusInternalServerError)
+		c.Abort()
+		//http.Error(c.Writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	responseJson(c.Writer, http.StatusOK, nil)
@@ -51,7 +52,8 @@ func (h *BookHandler) DeleteBook(c *gin.Context, bookId BookId) {
 func (h *BookHandler) BooksByAuthorId(c *gin.Context, params BooksByAuthorIdParams) {
 	books, err := h.booksSpi.FindBooksByAuthor(c.Request.Context(), params.AuthorId)
 	if err != nil {
-		httpError(c.Writer, err, http.StatusInternalServerError)
+		c.Abort()
+		//httpError(c.Writer, err, http.StatusInternalServerError)
 		return
 	}
 	responseJson(c.Writer, http.StatusOK, sliceToJsonBooks(books))

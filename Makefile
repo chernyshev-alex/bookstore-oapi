@@ -9,10 +9,10 @@ tidy:
 	go mod tidy
 
 server:
-	go run cmd/srv/main.go
+	go run main.go
 
-dbcreate:
-	sqlite3 -echo -init sql/init.sql data/books.db
+dbinit:
+	sqlite3 -echo -init sql/init.sql data/books.db  .quit
 
-dbboil:
+dbgen:
 	sqlboiler  -o internal/models  sqlite3

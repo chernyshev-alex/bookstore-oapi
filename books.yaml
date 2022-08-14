@@ -2,7 +2,7 @@ openapi: 3.0.0
 
 servers:
 - description: Local dev
-  url: http://127.0.0.1:9234
+  url: http://127.0.0.1:8080
 
 info:
   contact:
@@ -27,7 +27,7 @@ paths:
       responses:
         "200":
           $ref: '#/components/responses/SearchBooksResponse'
-        "400":
+        "401":
           $ref: '#/components/responses/ErrorResponse'
         "500":
           $ref: '#/components/responses/ErrorResponse'
@@ -41,7 +41,7 @@ paths:
       responses:
         "201":
           $ref: '#/components/responses/AddBookResponse'
-        "400":
+        "401":
           $ref: '#/components/responses/ErrorResponse'
         "500":
           $ref: '#/components/responses/ErrorResponse'
@@ -131,5 +131,12 @@ components:
           type: integer
       required: [id, isbn, title, descr, publisher, publisherId, author, authorId, year]
 
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - BearerAuth: []
    
 

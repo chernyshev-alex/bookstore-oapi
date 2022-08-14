@@ -22,14 +22,16 @@ type ServerConfig struct {
 	Prometeus      string
 	HttpLimiter    float64
 }
+type SwaggerConfig struct {
+	File string
+}
 type Config struct {
-	Db     DbConfig     `mapstructure:"database"`
-	Server ServerConfig `mapstructure:"server"`
+	Db      DbConfig      `mapstructure:"database"`
+	Server  ServerConfig  `mapstructure:"server"`
+	Swagger SwaggerConfig `mapstructure:"swagger"`
 }
 
 func LoadConfig(configPath string) (c *Config, e error) {
-	fmt.Printf("*** configPath *** %s \n", configPath)
-
 	v := viper.New()
 	v.SetConfigFile(configPath)
 

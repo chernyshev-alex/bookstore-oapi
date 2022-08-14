@@ -29,10 +29,7 @@ func main() {
 	}
 
 	for i := 0; i < 10; i++ {
-		_, err := client.SearchBooksByAuthor(context.Background(),
-			&SearchBooksByAuthorParams{
-				AuthorId: 1,
-			})
+		_, err := client.BooksByAuthorId(context.Background(), &BooksByAuthorIdParams{AuthorId: "1"})
 		if err != nil {
 			log.Fatalf("Couldn't create task %s", err)
 		}

@@ -11,6 +11,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	BearerAuthScopes = "BearerAuth.Scopes"
+)
+
 // BookJson defines model for BookJson.
 type BookJson struct {
 	Author      string `json:"author"`
@@ -75,6 +79,8 @@ type MiddlewareFunc func(c *gin.Context)
 // AddBook operation middleware
 func (siw *ServerInterfaceWrapper) AddBook(c *gin.Context) {
 
+	c.Set(BearerAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -96,6 +102,8 @@ func (siw *ServerInterfaceWrapper) DeleteBook(c *gin.Context) {
 		return
 	}
 
+	c.Set(BearerAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -107,6 +115,8 @@ func (siw *ServerInterfaceWrapper) DeleteBook(c *gin.Context) {
 func (siw *ServerInterfaceWrapper) BooksByAuthorId(c *gin.Context) {
 
 	var err error
+
+	c.Set(BearerAuthScopes, []string{""})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params BooksByAuthorIdParams

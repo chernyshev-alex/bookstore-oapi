@@ -1,4 +1,12 @@
 
+drop table if exists users;
+create table users (
+	id integer primary key autoincrement,
+	name varchar(255)
+);
+
+	insert into users(name) values ('Olga');
+
 drop table if exists books;
 
 create table books (

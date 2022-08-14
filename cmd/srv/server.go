@@ -1,10 +1,8 @@
-package main
+package srv
 
 import (
 	"database/sql"
-	"flag"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -14,10 +12,11 @@ import (
 	"github.com/chernyshev-alex/go-bookstore-oapi/internal/repo"
 	"github.com/chernyshev-alex/go-bookstore-oapi/internal/rest"
 	"github.com/chernyshev-alex/go-bookstore-oapi/internal/service"
-	"github.com/deepmap/oapi-codegen/examples/petstore-expanded/gin/api"
 	middleware "github.com/deepmap/oapi-codegen/pkg/gin-middleware"
 	"github.com/didip/tollbooth/v7"
 	"github.com/didip/tollbooth/v7/limiter"
+	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
@@ -40,7 +39,7 @@ func NewServer(conf *serverConfig) *http.Server {
 	}
 
 	r = rest.RegisterHandlers(r, conf.handler)
-	registerSwaggerApi(r)
+	RegisterSwaggerApi(r)
 
 	lmt := tollbooth.NewLimiter(conf.env.Server.HttpLimiter,
 		&limiter.ExpirableOptions{DefaultExpirationTTL: time.Second})
@@ -69,12 +68,14 @@ func initDb(conf *env.DbConfig) *sql.DB {
 	return db
 }
 
-func registerSwaggerApi(router *gin.Engine) {
-	swagger, err := api.GetSwagger()
-	if err != nil {
-		logger.Error("failed loading swagger file ", err)
-	}
+func GetSwagger(filePath string) (swagger *openapi3.T, err error) {
+	loader := openapi3.NewLoader()
+	loader.IsExternalRefsAllowed = true
+	return loader.LoadFromFile(filePath)
+}
 
+func RegisterSwaggerApi(router *gin.Engine) {
+	var swagger openapi3.T
 	router.GET("/openapi3.json", func(c *gin.Context) {
 		data, _ := yaml.Marshal(&swagger)
 		w := c.Writer
@@ -83,13 +84,7 @@ func registerSwaggerApi(router *gin.Engine) {
 	})
 }
 
-func startServices(conf *env.Config) {
-	swagger, err := api.GetSwagger()
-	if err != nil {
-		logger.Panic("Error loading swagger spec", zap.Error(err))
-	}
-	swagger.Servers = nil
-
+func StartServices(conf *env.Config) {
 	logger.Info("init db", zap.Any("conf", conf.Db))
 	db := initDb(&conf.Db)
 
@@ -115,14 +110,26 @@ func startServices(conf *env.Config) {
 		)
 	}
 
+	swagger, err := GetSwagger(conf.Swagger.File)
+	if err != nil {
+		logger.Panic("Error loading swagger spec", zap.Error(err))
+	}
+	swagger.Servers = nil
+
+	validator, _ := rest.NewValidator()
+	//swaggerValidator := middleware.OapiRequestValidator(swagger)
+	hf := middleware.OapiRequestValidatorWithOptions(swagger,
+		&middleware.Options{
+			Options: openapi3filter.Options{
+				AuthenticationFunc: rest.NewAuthenticator(validator),
+			},
+		})
+
 	srv_conf := serverConfig{
-		env:     conf,
-		metrics: promExporter,
-		handler: bookStoreAPI,
-		middlewares: gin.HandlersChain{
-			logRequests,
-			middleware.OapiRequestValidator(swagger),
-		},
+		env:         conf,
+		metrics:     promExporter,
+		handler:     bookStoreAPI,
+		middlewares: gin.HandlersChain{logRequests, hf}, // swaggerValidator
 	}
 
 	err = NewServer(&srv_conf).ListenAndServe()
@@ -131,20 +138,14 @@ func startServices(conf *env.Config) {
 	}
 }
 
-func main() {
-	var confPath, address string
+func StartServer(env *env.Config) {
+	// var confPath string
+	// flag.StringVar(&confPath, "conf", "app-conf.toml", "config file")
+	// flag.Parse()
 
-	flag.StringVar(&confPath, "conf", "app-conf.toml", "config file")
-	flag.StringVar(&address, "address", "", "HTTP Server Address")
-	flag.Parse()
-
-	env, err := env.LoadConfig(confPath)
-	if err != nil {
-		log.Fatal("failed load config")
-	}
-
-	if len(address) > 0 { // override
-		env.Server.Host = address
-	}
-	startServices(env)
+	// env, err := env.LoadConfig(confPath)
+	// if err != nil {
+	// 	log.Fatal("failed load config")
+	// }
+	StartServices(env)
 }

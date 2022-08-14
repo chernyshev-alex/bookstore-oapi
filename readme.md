@@ -21,3 +21,5 @@
 8. HTTP requests control 
    - Circuit Breaker
    - Requests Limiter  
+9 Security
+   - JWT

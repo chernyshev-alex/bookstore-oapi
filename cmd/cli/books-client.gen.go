@@ -17,36 +17,45 @@ import (
 	"github.com/deepmap/oapi-codegen/pkg/runtime"
 )
 
-// Book defines model for Book.
-type Book struct {
+const (
+	BearerAuthScopes = "BearerAuth.Scopes"
+)
+
+// BookJson defines model for BookJson.
+type BookJson struct {
 	Author      string `json:"author"`
 	AuthorId    int    `json:"authorId"`
-	BookId      int    `json:"bookId"`
+	Descr       string `json:"descr"`
+	Id          int    `json:"id"`
+	Isbn        string `json:"isbn"`
 	Publisher   string `json:"publisher"`
 	PublisherId int    `json:"publisherId"`
 	Title       string `json:"title"`
 	Year        int    `json:"year"`
 }
 
+// BookId defines model for bookId.
+type BookId = string
+
 // AddBookResponse defines model for AddBookResponse.
-type AddBookResponseT struct {
-	Book *Book `json:"book,omitempty"`
-}
+// type AddBookResponse struct {
+// 	Book BookJson `json:"book"`
+// }
 
 // ErrorResponse defines model for ErrorResponse.
 type ErrorResponse struct {
-	Error *string `json:"error,omitempty"`
+	Error string `json:"error"`
 }
 
 // SearchBooksResponse defines model for SearchBooksResponse.
-type SearchBooksResponse = []Book
+type SearchBooksResponse = []BookJson
 
 // AddBookRequest defines model for AddBookRequest.
-type AddBookRequest = Book
+type AddBookRequest = BookJson
 
-// SearchBooksByAuthorParams defines parameters for SearchBooksByAuthor.
-type SearchBooksByAuthorParams struct {
-	AuthorId int `form:"authorId" json:"authorId"`
+// BooksByAuthorIdParams defines parameters for BooksByAuthorId.
+type BooksByAuthorIdParams struct {
+	AuthorId string `form:"authorId" json:"authorId"`
 }
 
 // AddBookJSONRequestBody defines body for AddBook for application/json ContentType.
@@ -131,10 +140,10 @@ type ClientInterface interface {
 	AddBook(ctx context.Context, body AddBookJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteBook request
-	DeleteBook(ctx context.Context, bookId int, reqEditors ...RequestEditorFn) (*http.Response, error)
+	DeleteBook(ctx context.Context, bookId BookId, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// SearchBooksByAuthor request
-	SearchBooksByAuthor(ctx context.Context, params *SearchBooksByAuthorParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// BooksByAuthorId request
+	BooksByAuthorId(ctx context.Context, params *BooksByAuthorIdParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) AddBookWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -161,7 +170,7 @@ func (c *Client) AddBook(ctx context.Context, body AddBookJSONRequestBody, reqEd
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteBook(ctx context.Context, bookId int, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) DeleteBook(ctx context.Context, bookId BookId, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDeleteBookRequest(c.Server, bookId)
 	if err != nil {
 		return nil, err
@@ -173,8 +182,8 @@ func (c *Client) DeleteBook(ctx context.Context, bookId int, reqEditors ...Reque
 	return c.Client.Do(req)
 }
 
-func (c *Client) SearchBooksByAuthor(ctx context.Context, params *SearchBooksByAuthorParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewSearchBooksByAuthorRequest(c.Server, params)
+func (c *Client) BooksByAuthorId(ctx context.Context, params *BooksByAuthorIdParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewBooksByAuthorIdRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -226,7 +235,7 @@ func NewAddBookRequestWithBody(server string, contentType string, body io.Reader
 }
 
 // NewDeleteBookRequest generates requests for DeleteBook
-func NewDeleteBookRequest(server string, bookId int) (*http.Request, error) {
+func NewDeleteBookRequest(server string, bookId BookId) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -259,8 +268,8 @@ func NewDeleteBookRequest(server string, bookId int) (*http.Request, error) {
 	return req, nil
 }
 
-// NewSearchBooksByAuthorRequest generates requests for SearchBooksByAuthor
-func NewSearchBooksByAuthorRequest(server string, params *SearchBooksByAuthorParams) (*http.Request, error) {
+// NewBooksByAuthorIdRequest generates requests for BooksByAuthorId
+func NewBooksByAuthorIdRequest(server string, params *BooksByAuthorIdParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -351,23 +360,23 @@ type ClientWithResponsesInterface interface {
 	AddBookWithResponse(ctx context.Context, body AddBookJSONRequestBody, reqEditors ...RequestEditorFn) (*AddBookResponse, error)
 
 	// DeleteBook request
-	DeleteBookWithResponse(ctx context.Context, bookId int, reqEditors ...RequestEditorFn) (*DeleteBookResponse, error)
+	DeleteBookWithResponse(ctx context.Context, bookId BookId, reqEditors ...RequestEditorFn) (*DeleteBookResponse, error)
 
-	// SearchBooksByAuthor request
-	SearchBooksByAuthorWithResponse(ctx context.Context, params *SearchBooksByAuthorParams, reqEditors ...RequestEditorFn) (*SearchBooksByAuthorResponse, error)
+	// BooksByAuthorId request
+	BooksByAuthorIdWithResponse(ctx context.Context, params *BooksByAuthorIdParams, reqEditors ...RequestEditorFn) (*BooksByAuthorIdResponse, error)
 }
 
 type AddBookResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON201      *struct {
-		Book *Book `json:"book,omitempty"`
+		Book BookJson `json:"book"`
 	}
 	JSON400 *struct {
-		Error *string `json:"error,omitempty"`
+		Error string `json:"error"`
 	}
 	JSON500 *struct {
-		Error *string `json:"error,omitempty"`
+		Error string `json:"error"`
 	}
 }
 
@@ -391,7 +400,7 @@ type DeleteBookResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON500      *struct {
-		Error *string `json:"error,omitempty"`
+		Error string `json:"error"`
 	}
 }
 
@@ -411,20 +420,20 @@ func (r DeleteBookResponse) StatusCode() int {
 	return 0
 }
 
-type SearchBooksByAuthorResponse struct {
+type BooksByAuthorIdResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *[]Book
+	JSON200      *[]BookJson
 	JSON400      *struct {
-		Error *string `json:"error,omitempty"`
+		Error string `json:"error"`
 	}
 	JSON500 *struct {
-		Error *string `json:"error,omitempty"`
+		Error string `json:"error"`
 	}
 }
 
 // Status returns HTTPResponse.Status
-func (r SearchBooksByAuthorResponse) Status() string {
+func (r BooksByAuthorIdResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -432,7 +441,7 @@ func (r SearchBooksByAuthorResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r SearchBooksByAuthorResponse) StatusCode() int {
+func (r BooksByAuthorIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -457,7 +466,7 @@ func (c *ClientWithResponses) AddBookWithResponse(ctx context.Context, body AddB
 }
 
 // DeleteBookWithResponse request returning *DeleteBookResponse
-func (c *ClientWithResponses) DeleteBookWithResponse(ctx context.Context, bookId int, reqEditors ...RequestEditorFn) (*DeleteBookResponse, error) {
+func (c *ClientWithResponses) DeleteBookWithResponse(ctx context.Context, bookId BookId, reqEditors ...RequestEditorFn) (*DeleteBookResponse, error) {
 	rsp, err := c.DeleteBook(ctx, bookId, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -465,13 +474,13 @@ func (c *ClientWithResponses) DeleteBookWithResponse(ctx context.Context, bookId
 	return ParseDeleteBookResponse(rsp)
 }
 
-// SearchBooksByAuthorWithResponse request returning *SearchBooksByAuthorResponse
-func (c *ClientWithResponses) SearchBooksByAuthorWithResponse(ctx context.Context, params *SearchBooksByAuthorParams, reqEditors ...RequestEditorFn) (*SearchBooksByAuthorResponse, error) {
-	rsp, err := c.SearchBooksByAuthor(ctx, params, reqEditors...)
+// BooksByAuthorIdWithResponse request returning *BooksByAuthorIdResponse
+func (c *ClientWithResponses) BooksByAuthorIdWithResponse(ctx context.Context, params *BooksByAuthorIdParams, reqEditors ...RequestEditorFn) (*BooksByAuthorIdResponse, error) {
+	rsp, err := c.BooksByAuthorId(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseSearchBooksByAuthorResponse(rsp)
+	return ParseBooksByAuthorIdResponse(rsp)
 }
 
 // ParseAddBookResponse parses an HTTP response from a AddBookWithResponse call
@@ -490,7 +499,7 @@ func ParseAddBookResponse(rsp *http.Response) (*AddBookResponse, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
 		var dest struct {
-			Book *Book `json:"book,omitempty"`
+			Book BookJson `json:"book"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
@@ -499,7 +508,7 @@ func ParseAddBookResponse(rsp *http.Response) (*AddBookResponse, error) {
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest struct {
-			Error *string `json:"error,omitempty"`
+			Error string `json:"error"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
@@ -508,7 +517,7 @@ func ParseAddBookResponse(rsp *http.Response) (*AddBookResponse, error) {
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest struct {
-			Error *string `json:"error,omitempty"`
+			Error string `json:"error"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
@@ -536,7 +545,7 @@ func ParseDeleteBookResponse(rsp *http.Response) (*DeleteBookResponse, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest struct {
-			Error *string `json:"error,omitempty"`
+			Error string `json:"error"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
@@ -548,22 +557,22 @@ func ParseDeleteBookResponse(rsp *http.Response) (*DeleteBookResponse, error) {
 	return response, nil
 }
 
-// ParseSearchBooksByAuthorResponse parses an HTTP response from a SearchBooksByAuthorWithResponse call
-func ParseSearchBooksByAuthorResponse(rsp *http.Response) (*SearchBooksByAuthorResponse, error) {
+// ParseBooksByAuthorIdResponse parses an HTTP response from a BooksByAuthorIdWithResponse call
+func ParseBooksByAuthorIdResponse(rsp *http.Response) (*BooksByAuthorIdResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &SearchBooksByAuthorResponse{
+	response := &BooksByAuthorIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest []Book
+		var dest []BookJson
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -571,7 +580,7 @@ func ParseSearchBooksByAuthorResponse(rsp *http.Response) (*SearchBooksByAuthorR
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest struct {
-			Error *string `json:"error,omitempty"`
+			Error string `json:"error"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
@@ -580,7 +589,7 @@ func ParseSearchBooksByAuthorResponse(rsp *http.Response) (*SearchBooksByAuthorR
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest struct {
-			Error *string `json:"error,omitempty"`
+			Error string `json:"error"`
 		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
