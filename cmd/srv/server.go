@@ -139,13 +139,5 @@ func StartServices(conf *env.Config) {
 }
 
 func StartServer(env *env.Config) {
-	// var confPath string
-	// flag.StringVar(&confPath, "conf", "app-conf.toml", "config file")
-	// flag.Parse()
-
-	// env, err := env.LoadConfig(confPath)
-	// if err != nil {
-	// 	log.Fatal("failed load config")
-	// }
 	StartServices(env)
 }
