@@ -3,8 +3,6 @@ package srv
 import (
 	_ "embed"
 	"net/http"
-	"net/http/httptest"
-	"net/url"
 	"testing"
 
 	"github.com/chernyshev-alex/go-bookstore-oapi/internal/rest"
@@ -15,37 +13,24 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
-////go:embed src/books.yaml
-//var testSchema []byte
+var (
+	swagger_path = "../../books.yaml"
+	swagger      *openapi3.T
+	baseUrl      = "http://127.0.0.1:8080"
+	testToken    string
+	g            *gin.Engine
+	r            gin.IRoutes
+)
 
-func doGet(t *testing.T, handler http.Handler, rawURL string) *httptest.ResponseRecorder {
-	u, err := url.Parse(rawURL)
+func init() {
+	var err error
+	swagger, err = openapi3.NewLoader().LoadFromFile(swagger_path)
 	if err != nil {
-		t.Fatalf("Invalid url: %s", rawURL)
+		panic(err)
 	}
-
-	response := testutil.NewRequest().Get(u.RequestURI()).WithHost(u.Host).WithAcceptJson().GoWithHTTPHandler(t, handler)
-	return response.Recorder
-}
-
-func doPost(t *testing.T, handler http.Handler, rawURL string, jsonBody interface{}) *httptest.ResponseRecorder {
-	u, err := url.Parse(rawURL)
-	if err != nil {
-		t.Fatalf("Invalid url: %s", rawURL)
-	}
-
-	response := testutil.NewRequest().Post(u.RequestURI()).WithHost(u.Host).WithJsonBody(jsonBody).GoWithHTTPHandler(t, handler)
-	return response.Recorder
-}
-
-var baseUrl = "http://127.0.0.1:8080"
-
-func Test_OpenApiRequestValidator(t *testing.T) {
-	swagger, err := openapi3.NewLoader().LoadFromFile("../../books.yaml")
-	require.NoError(t, err, "Error initializing swagger")
+	testToken = rest.CreateToken(jwt.MapClaims{"foo": "bar"})
 
 	validator, _ := rest.NewValidator()
 	handler := middleware.OapiRequestValidatorWithOptions(swagger,
@@ -55,16 +40,20 @@ func Test_OpenApiRequestValidator(t *testing.T) {
 			},
 		})
 
-	g := gin.New()
-	g.Use(handler)
+	g = gin.New()
+	r = g.Use(handler)
+}
 
-	// create fake token
-	tokenStr := rest.CreateToken(jwt.MapClaims{"foo": "bar"})
+func Test_OpenApiRequestValidator(t *testing.T) {
+	var q = "/search/books"
+	var qbyAuthor = baseUrl + q + "?authorId=1000"
 
-	rec := testutil.NewRequest().WithAcceptJson().WithJWSAuth(tokenStr).
-		Get(baseUrl+"/search/books?authorId=1000").
-		GoWithHTTPHandler(t, g)
+	r.GET(q, func(c *gin.Context) {})
 
-	assert.Equal(t, http.StatusForbidden, rec.Code())
+	rec := testutil.NewRequest().WithAcceptJson().WithJWSAuth(testToken).Get(qbyAuthor).GoWithHTTPHandler(t, g)
+	assert.Equal(t, http.StatusOK, rec.Code())
+
+	rec = testutil.NewRequest().WithAcceptJson().Get(qbyAuthor).GoWithHTTPHandler(t, g)
+	assert.Equal(t, http.StatusBadRequest, rec.Code())
 
 }

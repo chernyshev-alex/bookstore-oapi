@@ -117,7 +117,6 @@ func StartServices(conf *env.Config) {
 	swagger.Servers = nil
 
 	validator, _ := rest.NewValidator()
-	//swaggerValidator := middleware.OapiRequestValidator(swagger)
 	hf := middleware.OapiRequestValidatorWithOptions(swagger,
 		&middleware.Options{
 			Options: openapi3filter.Options{
