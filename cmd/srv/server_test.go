@@ -46,14 +46,15 @@ func init() {
 
 func Test_OpenApiRequestValidator(t *testing.T) {
 	var q = "/search/books"
-	var qbyAuthor = baseUrl + q + "?authorId=1000"
+	var qByAuthor = baseUrl + q + "?authorId=1000"
 
 	r.GET(q, func(c *gin.Context) {})
 
-	rec := testutil.NewRequest().WithAcceptJson().WithJWSAuth(testToken).Get(qbyAuthor).GoWithHTTPHandler(t, g)
+	rec := testutil.NewRequest().WithAcceptJson().WithJWSAuth(testToken).Get(qByAuthor).GoWithHTTPHandler(t, g)
 	assert.Equal(t, http.StatusOK, rec.Code())
 
-	rec = testutil.NewRequest().WithAcceptJson().Get(qbyAuthor).GoWithHTTPHandler(t, g)
+	// failed with no token
+	rec = testutil.NewRequest().WithAcceptJson().Get(qByAuthor).GoWithHTTPHandler(t, g)
 	assert.Equal(t, http.StatusBadRequest, rec.Code())
 
 }
